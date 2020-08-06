@@ -20,9 +20,22 @@ interface Props {
 	localeData?: LocaleData;
 }
 
+const useI18nTransformHooks = () => {
+	const [ hooks, setHooks ] = React.useState( [] );
+	const registerHook = ( hook ) => setHooks( hooks.concat( hook ) );
+	const unregisterHook = ( hook ) => setHooks( hooks.filter( ( _hook ) => _hook !== hook ) );
+
+	return { hooks, registerHook, unregisterHook };
+};
+
 export const I18nProvider: React.FunctionComponent< Props > = ( { children, localeData } ) => {
-	const contextValue = React.useMemo< I18nReact >( () => makeContextValue( localeData ), [
+	const options = {
+		lookup: useI18nTransformHooks(),
+		translation: useI18nTransformHooks(),
+	};
+	const contextValue = React.useMemo< I18nReact >( () => makeContextValue( localeData, options ), [
 		localeData,
+		options,
 	] );
 	return <I18nContext.Provider value={ contextValue }>{ children }</I18nContext.Provider>;
 };
@@ -61,6 +74,24 @@ export const withI18n = createHigherOrderComponent< I18nReact >( ( InnerComponen
 	};
 }, 'withI18n' );
 
+function bindI18nFunction( i18n, fnName, options ) {
+	const boundFn = i18n[ fnName ].bind( i18n );
+
+	return ( ...args ) => {
+		const transformedArguments = ( options?.lookup?.hooks || [] ).reduce(
+			( accumulator, hook ) => hook( accumulator, args, fnName, options ),
+			args
+		);
+
+		const transformedTranslation = ( options?.translation?.hooks || [] ).reduce(
+			( accumulator, hook ) => hook( accumulator, transformedArguments, fnName, options ),
+			boundFn( transformedArguments )
+		);
+
+		return transformedTranslation;
+	};
+}
+
 /**
  * Utility to make a new context value
  *
@@ -68,15 +99,17 @@ export const withI18n = createHigherOrderComponent< I18nReact >( ( InnerComponen
  *
  * @returns The context value with bound translation functions
  */
-function makeContextValue( localeData?: LocaleData ): I18nReact {
+function makeContextValue( localeData?: LocaleData, options ): I18nReact {
 	const i18n = createI18n( localeData );
 	const i18nLocale = localeData?.[ '' ]?.localeSlug ?? 'en';
 	return {
-		__: i18n.__.bind( i18n ),
+		// __: i18n.__.bind( i18n ),
+		__: bindI18nFunction( i18n, '__', options ),
 		_n: i18n._n.bind( i18n ),
 		_nx: i18n._nx.bind( i18n ),
 		_x: i18n._x.bind( i18n ),
 		isRTL: i18n.isRTL.bind( i18n ),
 		i18nLocale,
+		registerTranslationHook: options?.translation?.registerHook,
 	};
 }
