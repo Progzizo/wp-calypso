@@ -61,7 +61,6 @@ const Gutenboard: React.FunctionComponent = () => {
 			document.head.appendChild( linkBase );
 			document.head.appendChild( linkHeadings );
 		} );
-
 		recordOnboardingStart();
 	}, [] ); // eslint-disable-line react-hooks/exhaustive-deps
 
