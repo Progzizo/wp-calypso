@@ -76,8 +76,7 @@ ul.plans-feature-list__item-group {
 		font-size: $font-body-small;
 		color: var( --studio-blue-40 );
 		padding: 0;
-		display: inline-block;
-		vertical-align: middle;
+		display: flex;
 
 		&.is-free {
 			font-weight: bold;
@@ -88,6 +87,9 @@ ul.plans-feature-list__item-group {
 				fill: var( --studio-orange-40 );
 				stroke: var( --studio-orange-40 );
 			}
+		}
+		& > svg {
+			flex-shrink: 0;
 		}
 	}
 

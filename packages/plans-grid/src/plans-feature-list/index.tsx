@@ -122,20 +122,22 @@ const PlansFeatureList: React.FunctionComponent< Props > = ( {
 					'plans-feature-list__item-group--columns': multiColumn,
 				} ) }
 			>
-				<li className="plans-feature-list__item">
-					{ disabledLabel ? (
+				{ disabledLabel ? (
+					<li className="plans-feature-list__item">
 						<span className="plans-feature-list__item-disabled-message">
 							<Tip>{ disabledLabel }</Tip>
 						</span>
-					) : (
-						domainMessage && (
+					</li>
+				) : (
+					domainMessage && (
+						<li className="plans-feature-list__item">
 							<Button className={ domainMessage.className } onClick={ onPickDomain } isLink>
 								{ domainMessage.icon }
 								{ domainMessage.domainMessage }
 							</Button>
-						)
-					) }
-				</li>
+						</li>
+					)
+				) }
 				{ features.map( ( feature, i ) => (
 					<li key={ i } className="plans-feature-list__item">
 						{ TickIcon } <span>{ feature }</span>
