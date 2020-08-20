@@ -19,6 +19,7 @@ const PlanStep: React.FunctionComponent< LaunchStepProps > = ( { onNextStep } ) 
 	const domain = useSelect( ( select ) => select( LAUNCH_STORE ).getSelectedDomain() );
 
 	const LaunchStep = useSelect( ( select ) => select( LAUNCH_STORE ).getLaunchStep() );
+	const { isExperimental } = useSelect( ( select ) => select( LAUNCH_STORE ).getState() );
 
 	const defaultPaidPlan = useSelect( ( select ) => select( PLANS_STORE ).getDefaultPaidPlan() );
 
@@ -63,7 +64,7 @@ const PlanStep: React.FunctionComponent< LaunchStepProps > = ( { onNextStep } ) 
 							  }
 							: undefined
 					}
-					singleColumn
+					singleColumn={ isExperimental }
 					recommendedPlan={ hasPaidDomain ? defaultPaidPlan : undefined }
 				/>
 			</div>

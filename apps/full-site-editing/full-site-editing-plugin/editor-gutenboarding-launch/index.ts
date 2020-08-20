@@ -52,6 +52,7 @@ function updateEditor() {
 
 		const isMobile = window.innerWidth < 768;
 		const isNewLaunch = window?.calypsoifyGutenberg?.isNewLaunch;
+		const isExperimental = window?.calypsoifyGutenberg?.isExperimental;
 
 		// Assert reason: We have an early return above with optional and falsy values. This should be a string.
 		const launchHref = window?.calypsoifyGutenberg?.frankenflowUrl as string;
@@ -78,6 +79,10 @@ function updateEditor() {
 			} );
 
 			if ( shouldOpenNewFlow ) {
+				// If we want to load experimental features, for now '?latest' query param should be added in URL.
+				// TODO: update this in calypsoify-iframe.tsx depending on abtest or other conditions.
+				isExperimental && dispatch( 'automattic/launch' ).enableExperimental();
+
 				// Open editor-site-launch sidebar
 				dispatch( 'automattic/launch' ).openSidebar();
 				setTimeout( () => {
