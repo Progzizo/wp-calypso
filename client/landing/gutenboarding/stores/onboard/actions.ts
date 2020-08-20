@@ -180,10 +180,6 @@ export const removeFeature = ( featureId: FeatureId ) => ( {
 	featureId,
 } );
 
-export const enableExperimental = () => ( {
-	type: 'SET_ENABLE_EXPERIMENTAL' as const,
-} );
-
 export type OnboardAction = ReturnType<
 	| typeof resetFonts
 	| typeof resetOnboardStore
@@ -205,5 +201,4 @@ export type OnboardAction = ReturnType<
 	| typeof setPlan
 	| typeof addFeature
 	| typeof removeFeature
-	| typeof enableExperimental
 >;
