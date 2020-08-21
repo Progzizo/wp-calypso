@@ -4,6 +4,7 @@
 import assert from 'assert';
 import config from 'config';
 import { times } from 'lodash';
+import { By } from 'selenium-webdriver';
 
 /**
  * Internal dependencies
@@ -11,6 +12,7 @@ import { times } from 'lodash';
 import LoginFlow from '../lib/flows/login-flow.js';
 
 import GutenbergEditorComponent from '../lib/gutenberg/gutenberg-editor-component';
+import PostPreviewEditorComponent from '../lib/components/post-preview-component';
 
 import * as driverManager from '../lib/driver-manager.js';
 import * as dataHelper from '../lib/data-helper.js';
@@ -22,13 +24,32 @@ const screenSize = driverManager.currentScreenSize();
 const host = dataHelper.getJetpackHost();
 
 let driver;
+let loginFlow;
 let currentGutenbergBlocksCode;
 let galleryImages;
 
+async function takeScreenshot( siteName, totalHeight, viewportHeight, scrollCb ) {
+	const now = Date.now() / 1000;
+
+	for ( let i = 0; i <= totalHeight / viewportHeight; i++ ) {
+		await scrollCb( i );
+
+		// TODO Could we combine those sshots into one?
+		await driver.takeScreenshot().then( ( data ) => {
+			return driver
+				.getCurrentUrl()
+				.then( ( url ) =>
+					mediaHelper.writeScreenshot( data, () => `${ siteName }-${ i }-${ now }.png`, { url } )
+				);
+		} );
+	}
+}
+
 before( async function () {
+	// this and let used to share variables across the tests... decide on a single approach
 	this.timeout( startBrowserTimeoutMS );
 	driver = await driverManager.startBrowser();
-	this.loginFlow = new LoginFlow( driver, 'gutenbergUpgradeUser' );
+	loginFlow = new LoginFlow( driver, 'gutenbergUpgradeUser' );
 	galleryImages = times( 5, () => mediaHelper.createFile() );
 } );
 
@@ -45,7 +66,7 @@ describe( `[${ host }] Calypso Gutenberg Editor: Pages (${ screenSize })`, funct
 			'e2egbupgrademayland',
 		].forEach( ( siteName ) => {
 			step( `Test popular blocks in ${ siteName }`, async function () {
-				return await this.loginFlow.loginAndStartNewPost( `${ siteName }.wordpress.com`, true );
+				return await loginFlow.loginAndStartNewPost( `${ siteName }.wordpress.com`, true );
 			} );
 
 			step( 'Popular blocks can be inserted and are shown without errors', async function () {
@@ -169,17 +190,52 @@ describe( `[${ host }] Calypso Gutenberg Editor: Pages (${ screenSize })`, funct
 				);
 
 				await gEditorComponent.ensureSaved();
+
 				const errorShown = await gEditorComponent.errorDisplayed();
 				assert.strictEqual( errorShown, false, 'There is an error shown on the editor page!' );
+
+				const editorViewport = await driver.findElement(
+					By.css( 'div.interface-interface-skeleton__content' )
+				);
+
+				// TODO Abstract this in the editor component
+				const editorViewportScrollHeight = await driver.executeScript(
+					'return arguments[0].scrollHeight',
+					editorViewport
+				);
+				const editorViewportClientHeight = await driver.executeScript(
+					'return arguments[0].clientHeight',
+					editorViewport
+				);
+				await takeScreenshot(
+					`${ siteName }-editor`,
+					editorViewportScrollHeight,
+					editorViewportClientHeight,
+					( i ) =>
+						driver.executeScript(
+							`arguments[0].scroll({top: arguments[0].clientHeight*${ i }})`,
+							editorViewport
+						)
+				);
 
 				// IMPORTANT: Need to switch to the right iframe before selecting...
 				// TODO Refactor this into its own test component so that the iframe switching code is abstracted away (maybe reuse the Gutenberg component -- since it's part of it)
 				currentGutenbergBlocksCode = await gEditorComponent.copyBlocksCode();
+
+				await gEditorComponent.launchPreview();
+				await PostPreviewEditorComponent.switchToIFrame( driver );
+
+				const totalHeight = await driver.executeScript( 'return document.body.offsetHeight' );
+				const windowHeight = await driver.executeScript( 'return window.outerHeight' );
+
+				await takeScreenshot( `${ siteName }-preview`, totalHeight, windowHeight, ( i ) =>
+					driver.executeScript( `window.scrollTo(0, window.outerHeight*${ i })` )
+				);
 			} );
 
 			step( 'Switches to edge site with next GB', async function () {
 				// Reuse the same session created earlier but change the site
-				return await this.loginFlow.loginAndStartNewPost( `${ siteName }edge.wordpress.com`, true );
+				return await loginFlow.loginAndStartNewPost( `${ siteName }edge.wordpress.com`, true );
 			} );
 
 			step( 'Test blocks markup are loaded fine from edge', async function () {

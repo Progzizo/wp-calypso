@@ -70,6 +70,7 @@ export function deleteFile( fileDetails ) {
 }
 
 export function writeScreenshot( data, filenameCallback, metadata ) {
+	debugger;
 	const buffer = Buffer.from( data, 'base64' );
 	let filename;
 	let pt = new PassThrough();
