@@ -82,7 +82,8 @@ export default function useStepNavigation(): { goBack: () => void; goNext: () =>
 		steps = steps.filter( ( step ) => step !== Step.Domains );
 	}
 
-	if ( plan && ! hasUsedPlansStep ) {
+	// Skip Plans step if a plan has been selected using the PlansModal but only if there is no Features step
+	if ( ! steps.includes( Step.Features ) && plan && ! hasUsedPlansStep ) {
 		steps = steps.filter( ( step ) => step !== Step.Plans );
 	}
 
