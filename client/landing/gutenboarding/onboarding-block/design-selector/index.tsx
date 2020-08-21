@@ -35,10 +35,8 @@ const DesignSelector: React.FunctionComponent = () => {
 
 	const { setSelectedDesign, setFonts } = useDispatch( ONBOARD_STORE );
 	const { getSelectedDesign, hasPaidDesign } = useSelect( ( select ) => select( ONBOARD_STORE ) );
-	//const { isExperimental } = useSelect( ( select ) => select( ONBOARD_STORE ).getState() );
+	const { isExperimental } = useSelect( ( select ) => select( ONBOARD_STORE ).getState() );
 	const [ filteredCategory, setFilteredCategory ] = React.useState( 'all' );
-
-	const isExperimental = true;
 
 	useTrackStep( 'DesignSelection', () => ( {
 		selected_design: getSelectedDesign()?.slug,
